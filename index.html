@@ -3,27 +3,156 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Player Douglas Almondes</title>
+<title>Douglas Music</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1db954">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- jsmediatags -->
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 
 <style>
-/* ✅ MANTIVE SEU CSS — pode colar tudo que você já tinha aqui */
+body{
+  margin:0;
+  background:#0b0b0b;
+  color:#fff;
+  font-family:system-ui, Arial;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+
+.player{
+  width:320px;
+  background:#121212;
+  border-radius:20px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 0 30px rgba(0,0,0,.6);
+}
+
+.cover{
+  width:200px;
+  height:200px;
+  border-radius:16px;
+  background:#1db954;
+  margin:0 auto 15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:60px;
+}
+
+.title{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.artist{
+  font-size:14px;
+  opacity:.7;
+  margin-bottom:15px;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:15px;
+}
+
+button{
+  background:#1db954;
+  border:none;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+input[type="file"]{
+  margin-top:15px;
+  color:#fff;
+}
+
+#installBtn{
+  margin-top:10px;
+  background:#333;
+}
 </style>
 </head>
 <body>
 
-<!-- 🔥 SEU HTML DO PLAYER FICA AQUI (SEM ALTERAR) -->
+<div class="player">
+  <div id="cover" class="cover">🎵</div>
+  <div id="title" class="title">Nenhuma música</div>
+  <div id="artist" class="artist">—</div>
+
+  <input type="file" id="fileInput" accept="audio/*">
+
+  <div class="controls">
+    <button onclick="playMusic()">▶️</button>
+    <button onclick="pauseMusic()">⏸️</button>
+  </div>
+
+  <button id="installBtn" style="display:none;">📲 Instalar App</button>
+</div>
 
 <audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
-// ✅ REGISTRO CORRETO DO SERVICE WORKER
+// ================= AUDIO =================
+const audio = document.getElementById('audio');
+const fileInput = document.getElementById('fileInput');
+const titleEl = document.getElementById('title');
+const artistEl = document.getElementById('artist');
+const coverEl = document.getElementById('cover');
+
+fileInput.addEventListener('change', function(){
+  const file = this.files[0];
+  if (!file) return;
+
+  const url = URL.createObjectURL(file);
+  audio.src = url;
+
+  // ler tags
+  jsmediatags.read(file, {
+    onSuccess: function(tag) {
+      titleEl.textContent = tag.tags.title || file.name;
+      artistEl.textContent = tag.tags.artist || 'Artista desconhecido';
+
+      if (tag.tags.picture){
+        const { data, format } = tag.tags.picture;
+        let base64String = "";
+        for (let i = 0; i < data.length; i++){
+          base64String += String.fromCharCode(data[i]);
+        }
+        const imageUri = `data:${format};base64,${btoa(base64String)}`;
+        coverEl.innerHTML = `<img src="${imageUri}" style="width:100%;height:100%;border-radius:16px;">`;
+      }
+    },
+    onError: function(){
+      titleEl.textContent = file.name;
+      artistEl.textContent = '—';
+    }
+  });
+});
+
+function playMusic(){
+  audio.play();
+}
+
+function pauseMusic(){
+  audio.pause();
+}
+
+// ================= SERVICE WORKER =================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
@@ -35,18 +164,16 @@ const installBtn = document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  if (installBtn) installBtn.style.display = 'inline-block';
+  installBtn.style.display = 'inline-block';
 });
 
-if (installBtn){
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-  });
-}
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+});
 </script>
 
 </body>
