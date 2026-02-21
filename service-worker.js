@@ -1,35 +1,16 @@
-const CACHE_NAME = 'player-douglas-cache-v1';
-const PRECACHE = [
-  './',
-  'https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js',
-  'player.js',
-  'auto-play.js',
-  'manifest.json',
-  'icons/icon-192.png',
-  'icons/icon-512.png'
-];
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
+const CACHE_NAME = 'player-cache-v1';
+const urlsToCache = ['.','index.html','player.js','auto-play.js','manifest.json'];
+
+self.addEventListener('install', e=>{
+  e.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(urlsToCache)));
 });
-self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+
+self.addEventListener('fetch', e=>{
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
 });
-self.addEventListener('fetch', event => {
-  if (
-    event.request.url.startsWith('chrome-extension:') ||
-    event.request.url.startsWith('data:') ||
-    event.request.url.startsWith('blob:')
-  ) return;
-  event.respondWith(
-    caches.match(event.request).then(resp => {
-      if (resp) return resp;
-      return fetch(event.request).then(fetchResp => {
-        if (fetchResp && fetchResp.ok) {
-          const copy = fetchResp.clone();
-          caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
-        }
-        return fetchResp;
-      }).catch(() => caches.match('./'));
-    })
+
+self.addEventListener('activate', e=>{
+  e.waitUntil(
+    caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k))))
   );
 });
