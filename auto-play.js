@@ -1,5 +1,6 @@
-// Tentar autocarregar a última seleção salva na sessão (localStorage)
-// e iniciar reprodução automática, se quiser
-window.addEventListener('load', () => {
-  // exemplo básico, implementar se desejar
+const overlay = document.getElementById('startOverlay');
+overlay.addEventListener('click', ()=>{
+  overlay.style.display='none';
+  const event = new Event('click');
+  document.getElementById('playBtn').dispatchEvent(event);
 });
