@@ -1,189 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Player Douglas Almondes</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1db954">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- jsmediatags -->
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 
 <style>
-/* ===== SEU CSS ORIGINAL ===== */
 :root{
-  --bg:#0b0b0b; --panel:#121212; --muted:#bdbdbd; --accent:#1db954; --accent-2:#14a746;
+  --bg:#0b0b0b;
+  --panel:#121212;
+  --muted:#bdbdbd;
+  --accent:#1db954;
+  --accent-2:#14a746;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
+
 body{
-  margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;
-  background:linear-gradient(180deg,var(--bg),#070707 70%); color:#fff;
-  display:flex; justify-content:center; padding:16px;
-}
-.app{
-  width:100%; max-width:980px; display:grid;
-  grid-template-columns: 395px 1fr; gap:14px;
-  align-items:start;
-  margin-bottom:28px;
-}
-@media (max-width:860px){
-  .app{ grid-template-columns: 1fr; padding-bottom:28px }
-  .cover{ height:300px }
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui, Arial;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
 }
 
-/* botão instalar */
-#installBtn{
-  position:fixed;
-  right:14px;
-  bottom:18px;
-  z-index:9999;
+.player{
+  background:var(--panel);
+  padding:24px;
+  border-radius:16px;
+  width:320px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+
+.cover{
+  width:200px;
+  height:200px;
+  background:#222;
+  margin:0 auto 16px;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+button{
   background:var(--accent);
-  color:#021;
   border:none;
-  padding:10px 14px;
+  padding:10px 18px;
   border-radius:999px;
-  font-weight:700;
+  font-weight:bold;
   cursor:pointer;
-  display:none;
+  margin:6px;
 }
-
-/* restante do seu CSS mantido */
-.panel{background:linear-gradient(180deg,var(--panel),#0f0f0f);border-radius:14px;padding:16px}
-.cover{width:100%;border-radius:12px;height:395px;background:#0f0f0f;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.cover img{width:100%;height:100%;object-fit:cover;display:block}
-.visual-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;flex-wrap:wrap;padding:8px}
-.track-info{padding:12px 6px 0;text-align:center}
-.title{font-size:18px;font-weight:700;margin:6px 0 4px}
-.artist{font-size:13px;color:var(--muted)}
-.progress-row{display:flex;align-items:center;gap:8px;margin-top:10px}
-.time{font-size:12px;color:var(--muted);width:44px;text-align:center}
-.progress{flex:1}
-.controls{display:flex;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap}
-.ctrl-btn{background:none;border:none;color:var(--accent);font-size:22px;width:56px;height:56px;border-radius:50%;cursor:pointer}
-.ctrl-btn.secondary{background:#0f0f0f;color:var(--muted);width:44px;height:44px;font-size:18px;border-radius:12px}
-.playlist-panel{background:linear-gradient(180deg,#0f0f0f,#0b0b0b);border-radius:14px;padding:12px;height:calc(100vh - 72px);overflow:hidden}
-.list{overflow:auto;height:calc(100% - 64px)}
-.track-item{padding:10px;border-radius:10px;display:flex;gap:12px;align-items:center;cursor:pointer}
-.track-item.active{background:rgba(29,185,84,.12)}
-.track-thumb{width:44px;height:44px;border-radius:8px;background:#0b0b0b;overflow:hidden}
-.track-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
+
 <body>
 
-<button id="installBtn">Instalar</button>
-
-<div class="app">
-
-<!-- PLAYER -->
-<div class="panel">
-  <div class="cover" id="coverBox">
-    <img id="coverImg" style="display:none">
-    <div class="visual-canvas" id="visualCanvas"></div>
+<div class="player">
+  <div class="cover">
+    <img id="coverImg" alt="Capa" style="display:none">
   </div>
 
-  <div class="track-info">
-    <div class="title" id="nowTitle">Nenhuma faixa</div>
-    <div class="artist" id="nowArtist">Selecione a pasta</div>
+  <h2 id="musicTitle">Douglas Music</h2>
 
-    <div class="progress-row">
-      <div class="time" id="curTime">0:00</div>
-      <input id="progress" class="progress" type="range" min="0" max="100" value="0">
-      <div class="time" id="durTime">0:00</div>
-    </div>
+  <input id="fileInput" type="file" accept="audio/*" multiple>
 
-    <div class="controls">
-      <button class="ctrl-btn secondary" id="shuffleBtn">🔀</button>
-      <button class="ctrl-btn" id="prevBtn">⏮️</button>
-      <button class="ctrl-btn" id="playBtn">▶️</button>
-      <button class="ctrl-btn" id="nextBtn">⏭️</button>
-      <button class="ctrl-btn secondary" id="repeatBtn">🔁</button>
-    </div>
+  <div style="margin-top:12px;">
+    <button id="playBtn">▶️ Play</button>
+    <button id="pauseBtn">⏸️ Pause</button>
   </div>
-</div>
-
-<!-- PLAYLIST -->
-<div class="playlist-panel panel">
-  <label for="fileInput" class="choose">📁 Selecionar</label>
-  <input id="fileInput" type="file" webkitdirectory multiple accept="audio/*" style="display:none">
-  <div class="list" id="list"></div>
-</div>
-
 </div>
 
 <audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
-/* ===== SERVICE WORKER REAL ===== */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 
-/* ===== INSTALL PWA ===== */
-let deferredPrompt=null;
-const installBtn=document.getElementById('installBtn');
+const audio = document.getElementById('audio');
+const fileInput = document.getElementById('fileInput');
+const playBtn = document.getElementById('playBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const title = document.getElementById('musicTitle');
+const coverImg = document.getElementById('coverImg');
 
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  installBtn.style.display='block';
+let playlist = [];
+let index = 0;
+
+fileInput.addEventListener('change', e=>{
+  playlist = Array.from(e.target.files);
+  index = 0;
+  loadTrack();
 });
 
-installBtn.onclick=async()=>{
-  if(!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt=null;
-  installBtn.style.display='none';
-};
+function loadTrack(){
+  if(!playlist.length) return;
 
-/* ===== PLAYER BASE ===== */
-const fileInput=document.getElementById('fileInput');
-const listEl=document.getElementById('list');
-const audio=document.getElementById('audio');
-const playBtn=document.getElementById('playBtn');
+  const file = playlist[index];
+  audio.src = URL.createObjectURL(file);
+  title.textContent = file.name;
 
-let files=[],current=0;
-
-fileInput.addEventListener('change',e=>{
-  files=Array.from(e.target.files).filter(f=>f.type.startsWith('audio/'));
-  renderList();
-  load(0);
-});
-
-function renderList(){
-  listEl.innerHTML='';
-  files.forEach((f,i)=>{
-    const d=document.createElement('div');
-    d.className='track-item';
-    d.textContent=f.name;
-    d.onclick=()=>{load(i);play()};
-    listEl.appendChild(d);
-  });
+  if(window.jsmediatags){
+    jsmediatags.read(file,{
+      onSuccess: tag=>{
+        const pic = tag.tags.picture;
+        if(pic){
+          let base64="";
+          for(let i=0;i<pic.data.length;i++){
+            base64+=String.fromCharCode(pic.data[i]);
+          }
+          coverImg.src=`data:${pic.format};base64,${btoa(base64)}`;
+          coverImg.style.display='block';
+        }
+      }
+    });
+  }
 }
 
-function load(i){
-  if(!files.length) return;
-  current=i;
-  audio.src=URL.createObjectURL(files[i]);
-  document.getElementById('nowTitle').textContent=files[i].name;
-}
-
-function play(){
-  audio.play();
-  playBtn.textContent='⏸️';
-}
-
-function pause(){
-  audio.pause();
-  playBtn.textContent='▶️';
-}
-
-playBtn.onclick=()=> audio.paused?play():pause();
+playBtn.onclick=()=>audio.play();
+pauseBtn.onclick=()=>audio.pause();
 </script>
 
 </body>
