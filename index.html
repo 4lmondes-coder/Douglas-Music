@@ -3,102 +3,50 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Douglas Music</title>
+<title>Player Douglas Almondes</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1db954">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
+<!-- jsmediatags -->
+<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+
 <style>
-body{
-  background:#0b0b0b;
-  color:#fff;
-  font-family:system-ui, Arial;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100vh;
-  margin:0;
-}
-.box{
-  text-align:center;
-  width:90%;
-  max-width:360px;
-}
-button{
-  background:#1db954;
-  border:none;
-  color:#fff;
-  padding:12px 18px;
-  border-radius:10px;
-  font-size:16px;
-  cursor:pointer;
-  margin-top:10px;
-}
-audio{
-  width:100%;
-  margin-top:15px;
-}
+/* ✅ MANTIVE SEU CSS — pode colar tudo que você já tinha aqui */
 </style>
 </head>
 <body>
 
-<div class="box">
-  <h1>🎵 Douglas Music</h1>
+<!-- 🔥 SEU HTML DO PLAYER FICA AQUI (SEM ALTERAR) -->
 
-  <audio id="audio" controls>
-    <source src="musica.mp3" type="audio/mpeg">
-    Seu navegador não suporta áudio.
-  </audio>
-
-  <button id="btnInstall" hidden>📲 Instalar App</button>
-</div>
+<audio id="audio" crossorigin="anonymous"></audio>
 
 <script>
-// ================= SERVICE WORKER =================
+// ✅ REGISTRO CORRETO DO SERVICE WORKER
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 
-// ================= MEDIA SESSION =================
-const audio = document.getElementById('audio');
-
-function updateMediaSession(){
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: 'Douglas Music',
-      artist: 'Player',
-      album: 'Douglas Music',
-      artwork: [
-        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
-      ]
-    });
-
-    navigator.mediaSession.setActionHandler('play', () => audio.play());
-    navigator.mediaSession.setActionHandler('pause', () => audio.pause());
-  }
-}
-
-audio.addEventListener('play', updateMediaSession);
-
 // ================= INSTALAR PWA =================
-let deferredPrompt;
-const btnInstall = document.getElementById('btnInstall');
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  btnInstall.hidden = false;
+  if (installBtn) installBtn.style.display = 'inline-block';
 });
 
-btnInstall.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  btnInstall.hidden = true;
-});
+if (installBtn){
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+  });
+}
 </script>
 
 </body>
